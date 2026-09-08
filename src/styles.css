@@ -77,8 +77,16 @@
 
 :root {
   --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.129 0.042 264.695);
+  --ink: oklch(0.28 0.05 254);
+  --fog: oklch(0.51 0.035 254);
+  --line: oklch(0.28 0.05 254 / 0.1);
+  --brand: oklch(0.57 0.2 253);
+  --brand-soft: oklch(0.57 0.2 253 / 0.1);
+  --glass: oklch(0.99 0.004 240 / 0.42);
+  --glass-2: oklch(0.9 0.03 250 / 0.3);
+  --panel: oklch(1 0 0 / 0.75);
+  --background: oklch(0.976 0.006 240);
+  --foreground: oklch(0.28 0.05 254);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.129 0.042 264.695);
   --popover: oklch(1 0 0);
@@ -155,4 +163,22 @@
     background-color: var(--color-background);
     color: var(--color-foreground);
   }
+}
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes sheen {
+  0% { transform: translateX(-160%) skewX(-14deg); }
+  100% { transform: translateX(360%) skewX(-14deg); }
+}
+@keyframes sweep {
+  from { clip-path: polygon(0 0, 0 0, 0 100%, 0 100%); }
+  to { clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%); }
+}
+
+@utility bn {
+  font-family: var(--font-bn);
+  line-height: 1.7;
 }
