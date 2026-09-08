@@ -1,6 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
+import { Check, Download, Search, Share2, X } from "lucide-react";
 import rawData from "@/data/postcodes.json";
+import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -52,12 +54,65 @@ const indexed = data.map((r) => ({
 
 const PAGE = 60;
 
+function districtText(rows: Row[], english: string) {
+  const bengali = rows[0]?.db ?? english;
+  const lines = rows.map((row) => `${row.n} (${row.c}) — ${row.t} — ${row.o}`);
+  return `${bengali} (${english}) postal codes\n${rows.length} post offices\n\n${lines.join("\n")}\n\nSource: Bengali Wikipedia · PostCode.Bangla`;
+}
+
+async function districtImage(rows: Row[], english: string) {
+  await document.fonts.ready;
+  const bengali = rows[0]?.db ?? english;
+  const width = 1080;
+  const headerHeight = 230;
+  const rowHeight = 58;
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = headerHeight + rows.length * rowHeight + 90;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return null;
+
+  ctx.fillStyle = "#f4f7fb";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = "#13263f";
+  ctx.font = '700 48px "Google Sans", "Noto Sans Bengali", sans-serif';
+  ctx.fillText(`${bengali} · ${english}`, 64, 78);
+  ctx.fillStyle = "#53667f";
+  ctx.font = '500 24px "Google Sans", "Noto Sans Bengali", sans-serif';
+  ctx.fillText(`${rows.length} post offices · Bangladesh postal code list`, 64, 122);
+  ctx.fillStyle = "#0877d1";
+  ctx.fillRect(64, 160, 952, 4);
+  ctx.fillStyle = "#53667f";
+  ctx.font = '600 18px "Google Sans", "Noto Sans Bengali", sans-serif';
+  ctx.fillText("POST CODE", 64, 205);
+  ctx.fillText("THANA", 295, 205);
+  ctx.fillText("SUB-OFFICE", 620, 205);
+
+  rows.forEach((row, index) => {
+    const y = headerHeight + index * rowHeight;
+    if (index % 2 === 0) {
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(48, y, 984, rowHeight);
+    }
+    ctx.fillStyle = "#13263f";
+    ctx.font = '500 21px "Google Sans", "Noto Sans Bengali", sans-serif';
+    ctx.fillText(`${row.n}  ${row.c}`, 64, y + 37);
+    ctx.fillText(row.t.slice(0, 24), 295, y + 37);
+    ctx.fillText(row.o.slice(0, 28), 620, y + 37);
+  });
+  ctx.fillStyle = "#53667f";
+  ctx.font = '500 17px "Google Sans", sans-serif';
+  ctx.fillText("PostCode.Bangla · Data from Bengali Wikipedia", 64, canvas.height - 34);
+  return new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/png"));
+}
+
 function Index() {
   const [query, setQuery] = useState("");
   const [division, setDivision] = useState("All");
   const [district, setDistrict] = useState("All");
   const [limit, setLimit] = useState(PAGE);
   const [copied, setCopied] = useState<string | null>(null);
+  const [shareStatus, setShareStatus] = useState("");
 
   const districts = useMemo(() => {
     const map = new Map<string, string>();
@@ -81,6 +136,7 @@ function Index() {
   }, [query, division, district]);
 
   const shown = results.slice(0, limit);
+  const districtRows = district === "All" ? [] : data.filter((row) => row.de === district);
 
   const copy = (row: Row) => {
     const text = row.n;
@@ -91,6 +147,50 @@ function Index() {
 
   const reset = () => {
     setLimit(PAGE);
+    setShareStatus("");
+  };
+
+  const shareText = async () => {
+    if (!districtRows.length) return;
+    const text = districtText(districtRows, district);
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: `${district} postal codes`, text });
+        setShareStatus("Shared");
+      } else {
+        await navigator.clipboard.writeText(text);
+        setShareStatus("List copied");
+      }
+    } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") return;
+      await navigator.clipboard?.writeText(text);
+      setShareStatus("List copied");
+    }
+  };
+
+  const shareImage = async () => {
+    if (!districtRows.length) return;
+    const blob = await districtImage(districtRows, district);
+    if (!blob) return;
+    const file = new File([blob], `${district.toLowerCase()}-postal-codes.png`, {
+      type: "image/png",
+    });
+    try {
+      if (navigator.share && navigator.canShare?.({ files: [file] })) {
+        await navigator.share({ title: `${district} postal codes`, files: [file] });
+        setShareStatus("Image shared");
+        return;
+      }
+    } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") return;
+    }
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = file.name;
+    link.click();
+    URL.revokeObjectURL(url);
+    setShareStatus("Image downloaded");
   };
 
   return (
@@ -131,24 +231,23 @@ function Index() {
           </div>
         </header>
 
-        <section className="pb-10 pt-14">
-          <div className="max-w-[34ch] animate-[rise_0.6s_var(--ease-kinetic)_both]">
+        <section className="pb-7 pt-8 sm:pt-10">
+          <div className="max-w-[46rem] animate-[rise_0.6s_var(--ease-kinetic)_both]">
             <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-brand">
               (a) Lookup
             </p>
-            <h1 className="mt-3 text-balance font-display text-4xl font-extrabold leading-[1.05] tracking-tight sm:text-5xl">
-              Find any office by <span className="text-brand">code</span> or name.
+            <h1 className="mt-2 text-balance font-display text-[2rem] font-extrabold leading-[1.12] sm:text-[2.65rem]">
+              Find any <span className="text-brand">postal code</span> in seconds.
             </h1>
-            <p className="mt-4 max-w-[46ch] text-pretty text-[15px] leading-relaxed text-fog">
-              Search post codes, districts, thanas and sub-offices across Bangladesh. Labels in
-              English; place names in Bengali with English alongside.
+            <p className="mt-2 max-w-[62ch] text-pretty text-sm leading-6 text-fog sm:text-[15px]">
+              Search all 64 districts and {data.length.toLocaleString()}+ post offices in English or বাংলা.
             </p>
           </div>
 
-          <div className="relative mt-8 max-w-2xl animate-[rise_0.7s_var(--ease-kinetic)_both] [animation-delay:120ms]">
-            <div className="absolute -inset-1 -z-10 -skew-x-3 rounded-2xl bg-glass outline-1 -outline-offset-1 outline-white/50 backdrop-blur-xl" />
-            <div className="flex items-center gap-3 rounded-2xl bg-panel px-5 py-4 outline-2 outline-transparent ring-1 ring-black/5 backdrop-blur-xl transition-shadow focus-within:outline-brand/60">
-              <span className="select-none font-mono text-lg text-brand">/</span>
+          <div className="relative mt-5 max-w-3xl animate-[rise_0.7s_var(--ease-kinetic)_both] [animation-delay:120ms]">
+            <div className="absolute -inset-1 -z-10 -skew-x-3 rounded-xl bg-glass outline-1 -outline-offset-1 outline-foreground/10 backdrop-blur-xl" />
+            <div className="flex h-13 items-center gap-3 rounded-xl bg-panel px-4 outline-2 outline-transparent ring-1 ring-foreground/5 backdrop-blur-xl transition-shadow focus-within:outline-brand/60">
+              <Search className="h-5 w-5 shrink-0 text-fog" aria-hidden="true" />
               <input
                 type="text"
                 value={query}
@@ -157,18 +256,23 @@ function Index() {
                   reset();
                 }}
                 placeholder="Code, district, thana or office…"
-                className="flex-1 bg-transparent font-bn text-[15px] outline-none placeholder:text-fog/60"
+                aria-label="Search postal codes"
+                className="min-w-0 flex-1 bg-transparent font-body text-[15px] outline-none placeholder:text-fog/60"
               />
               {query ? (
-                <button
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  aria-label="Clear search"
                   onClick={() => {
                     setQuery("");
                     reset();
                   }}
-                  className="font-mono text-[10px] uppercase tracking-[0.16em] text-fog hover:text-ink"
+                  className="h-8 w-8 shrink-0 text-fog hover:text-ink"
                 >
-                  Clear
-                </button>
+                  <X />
+                </Button>
               ) : (
                 <span className="hidden font-mono text-[10px] uppercase tracking-[0.16em] text-fog sm:block">
                   ↵
@@ -177,7 +281,7 @@ function Index() {
             </div>
           </div>
 
-          <div className="mt-6 flex flex-wrap items-center gap-2 animate-[rise_0.7s_var(--ease-kinetic)_both] [animation-delay:200ms]">
+          <div className="mt-4 flex gap-2 overflow-x-auto pb-1 animate-[rise_0.7s_var(--ease-kinetic)_both] [animation-delay:200ms] sm:flex-wrap sm:overflow-visible">
             <span className="mr-1 font-mono text-[10px] uppercase tracking-[0.16em] text-fog">
               Division
             </span>
@@ -191,13 +295,13 @@ function Index() {
                     setDistrict("All");
                     reset();
                   }}
-                  className={
+                    className={`shrink-0 ${
                     active
                       ? d === "All"
                         ? "rounded-full bg-ink px-3.5 py-1.5 text-[12px] font-medium text-background"
                         : "rounded-full bg-brand-soft px-3.5 py-1.5 text-[12px] font-medium text-brand ring-1 ring-brand/20"
-                      : "rounded-full bg-white/60 px-3.5 py-1.5 text-[12px] font-medium text-fog ring-1 ring-line transition-colors hover:text-ink"
-                  }
+                        : "rounded-full bg-panel px-3.5 py-1.5 text-[12px] font-medium text-fog ring-1 ring-line transition-colors hover:text-ink"
+                    }`}
                 >
                   {d}
                 </button>
@@ -205,7 +309,7 @@ function Index() {
             })}
           </div>
 
-          <div className="mt-3 flex flex-wrap items-center gap-2 animate-[rise_0.7s_var(--ease-kinetic)_both] [animation-delay:240ms]">
+          <div className="mt-3 grid grid-cols-[auto_minmax(0,20rem)] items-center gap-2 animate-[rise_0.7s_var(--ease-kinetic)_both] [animation-delay:240ms]">
             <span className="mr-1 font-mono text-[10px] uppercase tracking-[0.16em] text-fog">
               District
             </span>
@@ -215,7 +319,8 @@ function Index() {
                 setDistrict(e.target.value);
                 reset();
               }}
-              className="rounded-full bg-white/60 px-3.5 py-1.5 text-[12px] font-medium text-ink ring-1 ring-line outline-none"
+              aria-label="Filter by district"
+              className="min-w-0 rounded-full bg-panel px-3.5 py-1.5 text-[12px] font-medium text-ink ring-1 ring-line outline-none"
             >
               <option value="All">All districts</option>
               {districts.map(([en, bn]) => (
