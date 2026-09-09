@@ -54,6 +54,22 @@ const indexed = data.map((r) => ({
 
 const PAGE = 60;
 
+async function copyText(text: string) {
+  try {
+    await navigator.clipboard.writeText(text);
+    return;
+  } catch {
+    const textarea = document.createElement("textarea");
+    textarea.value = text;
+    textarea.style.position = "fixed";
+    textarea.style.opacity = "0";
+    document.body.appendChild(textarea);
+    textarea.select();
+    document.execCommand("copy");
+    textarea.remove();
+  }
+}
+
 function districtText(rows: Row[], english: string) {
   const bengali = rows[0]?.db ?? english;
   const lines = rows.map((row) => `${row.n} (${row.c}) — ${row.t} — ${row.o}`);
@@ -140,7 +156,7 @@ function Index() {
 
   const copy = (row: Row) => {
     const text = row.n;
-    void navigator.clipboard?.writeText(text);
+    void copyText(text);
     setCopied(`${row.o}-${row.n}`);
     window.setTimeout(() => setCopied(null), 1200);
   };
@@ -158,12 +174,12 @@ function Index() {
         await navigator.share({ title: `${district} postal codes`, text });
         setShareStatus("Shared");
       } else {
-        await navigator.clipboard.writeText(text);
+        await copyText(text);
         setShareStatus("List copied");
       }
     } catch (error) {
       if (error instanceof DOMException && error.name === "AbortError") return;
-      await navigator.clipboard?.writeText(text);
+      await copyText(text);
       setShareStatus("List copied");
     }
   };
@@ -309,7 +325,7 @@ function Index() {
             })}
           </div>
 
-          <div className="mt-3 grid grid-cols-[auto_minmax(0,20rem)] items-center gap-2 animate-[rise_0.7s_var(--ease-kinetic)_both] [animation-delay:240ms]">
+          <div className="mt-3 grid max-w-[25rem] grid-cols-[auto_minmax(0,20rem)] items-center gap-2 animate-[rise_0.7s_var(--ease-kinetic)_both] [animation-delay:240ms]">
             <span className="mr-1 font-mono text-[10px] uppercase tracking-[0.16em] text-fog">
               District
             </span>

@@ -4,4 +4,4 @@
 - [x] Switch to Google Sans with Noto Sans Bengali and fix Bengali numeral rendering
 - [x] Make search filters and results mobile-friendly
 - [x] Add district-list sharing as text and downloadable image
-- [ ] Verify desktop/mobile layout and sharing
+- [x] Verify desktop/mobile layout and sharing
