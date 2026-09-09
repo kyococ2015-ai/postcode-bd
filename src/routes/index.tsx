@@ -155,7 +155,7 @@ function Index() {
   const districtRows = district === "All" ? [] : data.filter((row) => row.de === district);
 
   const copy = (row: Row) => {
-    const text = row.n;
+    const text = `${row.o} - ${row.c}`;
     void copyText(text);
     setCopied(`${row.o}-${row.n}`);
     window.setTimeout(() => setCopied(null), 1200);
@@ -390,12 +390,11 @@ function Index() {
           <div className="relative animate-[sweep_0.7s_var(--ease-kinetic)_both] [animation-delay:320ms]">
             <div className="absolute -inset-1 -z-10 skew-x-[-1.5deg] rounded-[20px] bg-glass outline-1 -outline-offset-1 outline-white/50 backdrop-blur-xl" />
             <div className="overflow-hidden rounded-[16px] bg-panel ring-1 ring-black/5 backdrop-blur-xl">
-              <div className="hidden grid-cols-[1.1fr_1.5fr_1.3fr_1fr_auto] gap-3 border-b border-line px-5 py-3 font-mono text-[10px] uppercase tracking-[0.14em] text-fog sm:grid">
-                <span>Post code</span>
+              <div className="hidden grid-cols-[1.5fr_1.3fr_1fr_auto] gap-3 border-b border-line px-5 py-3 font-mono text-[10px] uppercase tracking-[0.14em] text-fog sm:grid">
                 <span>District</span>
                 <span>Thana</span>
                 <span>Sub-office</span>
-                <span className="text-right">Copy</span>
+                <span className="text-right">Post code · tap to copy</span>
               </div>
               <div className="divide-y divide-line text-sm">
                 {shown.length === 0 && (
