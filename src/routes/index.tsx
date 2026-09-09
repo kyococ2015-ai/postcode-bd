@@ -330,6 +330,32 @@ function Index() {
               ))}
             </select>
           </div>
+
+          {district !== "All" && (
+            <div className="mt-4 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-t border-line pt-4 sm:flex">
+              <div className="min-w-0 sm:mr-auto">
+                <p className="truncate text-sm font-semibold text-ink">
+                  Share {districtRows[0]?.db} ({district})
+                </p>
+                <p className="text-xs text-fog">{districtRows.length} post offices</p>
+              </div>
+              <div className="flex shrink-0 items-center gap-2">
+                <Button type="button" size="sm" variant="outline" onClick={shareText}>
+                  <Share2 aria-hidden="true" />
+                  Text
+                </Button>
+                <Button type="button" size="sm" variant="outline" onClick={shareImage}>
+                  <Download aria-hidden="true" />
+                  Image
+                </Button>
+              </div>
+              {shareStatus && (
+                <span className="col-span-2 flex items-center gap-1 text-xs font-medium text-brand sm:col-auto">
+                  <Check className="h-3.5 w-3.5" aria-hidden="true" /> {shareStatus}
+                </span>
+              )}
+            </div>
+          )}
         </section>
 
         <section className="pb-16">
@@ -348,7 +374,7 @@ function Index() {
           <div className="relative animate-[sweep_0.7s_var(--ease-kinetic)_both] [animation-delay:320ms]">
             <div className="absolute -inset-1 -z-10 skew-x-[-1.5deg] rounded-[20px] bg-glass outline-1 -outline-offset-1 outline-white/50 backdrop-blur-xl" />
             <div className="overflow-hidden rounded-[16px] bg-panel ring-1 ring-black/5 backdrop-blur-xl">
-              <div className="grid grid-cols-[1.1fr_1.5fr_1.3fr_1fr_auto] gap-3 border-b border-line px-5 py-3 font-mono text-[10px] uppercase tracking-[0.14em] text-fog">
+              <div className="hidden grid-cols-[1.1fr_1.5fr_1.3fr_1fr_auto] gap-3 border-b border-line px-5 py-3 font-mono text-[10px] uppercase tracking-[0.14em] text-fog sm:grid">
                 <span>Post code</span>
                 <span>District</span>
                 <span>Thana</span>
@@ -364,27 +390,39 @@ function Index() {
                 {shown.map((r) => (
                   <div
                     key={`${r.db}-${r.t}-${r.o}-${r.n}`}
-                    className="grid grid-cols-[1.1fr_1.5fr_1.3fr_1fr_auto] items-center gap-3 px-5 py-3 transition-colors hover:bg-brand-soft/50"
+                    className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-x-3 gap-y-2 px-4 py-4 transition-colors hover:bg-brand-soft/50 sm:grid-cols-[1.1fr_1.5fr_1.3fr_1fr_auto] sm:items-center sm:px-5 sm:py-3"
                   >
-                    <span className="font-mono font-medium text-ink">
+                    <div className="min-w-0 font-mono font-medium text-ink">
+                      <span className="mr-2 font-body text-[10px] uppercase text-fog sm:hidden">Code</span>
                       {r.n} <span className="bn text-fog">{r.c}</span>
-                    </span>
-                    <span>
-                      <span className="bn text-[15px]">{r.db}</span>{" "}
+                    </div>
+                    <div className="col-start-1 min-w-0 sm:col-auto">
+                      <span className="mr-2 text-[10px] uppercase text-fog sm:hidden">District</span>
+                      <span className="bn text-[15px] text-ink">{r.db}</span>{" "}
                       <span className="text-fog">{r.de}</span>
-                    </span>
-                    <span className="bn text-fog">{r.t}</span>
-                    <span className="bn text-fog">{r.o}</span>
-                    <button
+                    </div>
+                    <div className="col-start-1 min-w-0 sm:col-auto">
+                      <span className="mr-2 text-[10px] uppercase text-fog sm:hidden">Thana</span>
+                      <span className="bn text-fog">{r.t}</span>
+                    </div>
+                    <div className="col-start-1 min-w-0 sm:col-auto">
+                      <span className="mr-2 text-[10px] uppercase text-fog sm:hidden">Office</span>
+                      <span className="bn text-fog">{r.o}</span>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      aria-label={`Copy postal code ${r.n}`}
                       onClick={() => copy(r)}
                       className={
                         copied === `${r.o}-${r.n}`
-                          ? "justify-self-end rounded-md bg-ink px-2.5 py-1.5 font-mono text-[10px] uppercase tracking-[0.12em] text-background"
-                          : "justify-self-end rounded-md px-2.5 py-1.5 font-mono text-[10px] uppercase tracking-[0.12em] text-fog ring-1 ring-line transition-colors hover:text-ink"
+                          ? "col-start-2 row-start-1 h-8 justify-self-end bg-ink px-2.5 font-mono text-[10px] uppercase text-background hover:bg-ink sm:col-auto sm:row-auto"
+                          : "col-start-2 row-start-1 h-8 justify-self-end px-2.5 font-mono text-[10px] uppercase text-fog sm:col-auto sm:row-auto"
                       }
                     >
                       {copied === `${r.o}-${r.n}` ? "Copied" : "Copy"}
-                    </button>
+                    </Button>
                   </div>
                 ))}
               </div>
@@ -393,12 +431,15 @@ function Index() {
                   Showing {shown.length.toLocaleString()} of {results.length.toLocaleString()}
                 </span>
                 {shown.length < results.length && (
-                  <button
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
                     onClick={() => setLimit((l) => l + PAGE)}
-                    className="font-mono text-[11px] uppercase tracking-[0.12em] text-brand"
+                    className="font-mono text-[11px] uppercase text-brand"
                   >
                     Load more ↓
-                  </button>
+                  </Button>
                 )}
               </div>
             </div>
