@@ -155,7 +155,7 @@ function Index() {
   const districtRows = district === "All" ? [] : data.filter((row) => row.de === district);
 
   const copy = (row: Row) => {
-    const text = row.n;
+    const text = `${row.o} - ${row.c}`;
     void copyText(text);
     setCopied(`${row.o}-${row.n}`);
     window.setTimeout(() => setCopied(null), 1200);
@@ -390,12 +390,11 @@ function Index() {
           <div className="relative animate-[sweep_0.7s_var(--ease-kinetic)_both] [animation-delay:320ms]">
             <div className="absolute -inset-1 -z-10 skew-x-[-1.5deg] rounded-[20px] bg-glass outline-1 -outline-offset-1 outline-white/50 backdrop-blur-xl" />
             <div className="overflow-hidden rounded-[16px] bg-panel ring-1 ring-black/5 backdrop-blur-xl">
-              <div className="hidden grid-cols-[1.1fr_1.5fr_1.3fr_1fr_auto] gap-3 border-b border-line px-5 py-3 font-mono text-[10px] uppercase tracking-[0.14em] text-fog sm:grid">
-                <span>Post code</span>
+              <div className="hidden grid-cols-[1.5fr_1.3fr_1fr_auto] gap-3 border-b border-line px-5 py-3 font-mono text-[10px] uppercase tracking-[0.14em] text-fog sm:grid">
                 <span>District</span>
                 <span>Thana</span>
                 <span>Sub-office</span>
-                <span className="text-right">Copy</span>
+                <span className="text-right">Post code · tap to copy</span>
               </div>
               <div className="divide-y divide-line text-sm">
                 {shown.length === 0 && (
@@ -406,16 +405,11 @@ function Index() {
                 {shown.map((r) => (
                   <div
                     key={`${r.db}-${r.t}-${r.o}-${r.n}`}
-                    className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-x-3 gap-y-2 px-4 py-4 transition-colors hover:bg-brand-soft/50 sm:grid-cols-[1.1fr_1.5fr_1.3fr_1fr_auto] sm:items-center sm:px-5 sm:py-3"
+                    className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-x-3 gap-y-2 px-4 py-4 transition-colors hover:bg-brand-soft/50 sm:grid-cols-[1.5fr_1.3fr_1fr_auto] sm:items-center sm:px-5 sm:py-3"
                   >
-                    <div className="min-w-0 font-mono font-medium text-ink">
-                      <span className="mr-2 font-body text-[10px] uppercase text-fog sm:hidden">Code</span>
-                      {r.n} <span className="bn text-fog">{r.c}</span>
-                    </div>
-                    <div className="col-start-1 min-w-0 sm:col-auto">
+                    <div className="col-start-1 min-w-0">
                       <span className="mr-2 text-[10px] uppercase text-fog sm:hidden">District</span>
-                      <span className="bn text-[15px] text-ink">{r.db}</span>{" "}
-                      <span className="text-fog">{r.de}</span>
+                      <span className="bn text-[15px] text-ink">{r.db}</span>
                     </div>
                     <div className="col-start-1 min-w-0 sm:col-auto">
                       <span className="mr-2 text-[10px] uppercase text-fog sm:hidden">Thana</span>
@@ -425,20 +419,23 @@ function Index() {
                       <span className="mr-2 text-[10px] uppercase text-fog sm:hidden">Office</span>
                       <span className="bn text-fog">{r.o}</span>
                     </div>
-                    <Button
+                    <button
                       type="button"
-                      variant="outline"
-                      size="sm"
-                      aria-label={`Copy postal code ${r.n}`}
+                      aria-label={`Copy postal code ${r.c} of ${r.o}`}
                       onClick={() => copy(r)}
-                      className={
+                      className={`col-start-2 row-start-1 justify-self-end rounded-lg px-3 py-1.5 text-right ring-1 transition-colors sm:col-auto sm:row-auto ${
                         copied === `${r.o}-${r.n}`
-                          ? "col-start-2 row-start-1 h-8 justify-self-end bg-ink px-2.5 font-mono text-[10px] uppercase text-background hover:bg-ink sm:col-auto sm:row-auto"
-                          : "col-start-2 row-start-1 h-8 justify-self-end px-2.5 font-mono text-[10px] uppercase text-fog sm:col-auto sm:row-auto"
-                      }
+                          ? "bg-ink text-background ring-ink"
+                          : "bg-panel text-ink ring-line hover:ring-brand/40"
+                      }`}
                     >
-                      {copied === `${r.o}-${r.n}` ? "Copied" : "Copy"}
-                    </Button>
+                      <span className="bn block font-display text-sm font-bold leading-tight">
+                        {r.c}
+                      </span>
+                      <span className="block font-mono text-[10px] leading-tight opacity-70">
+                        {copied === `${r.o}-${r.n}` ? "Copied" : r.n}
+                      </span>
+                    </button>
                   </div>
                 ))}
               </div>
